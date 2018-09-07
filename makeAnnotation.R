@@ -122,6 +122,7 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   colnames(vcf.table) <- c("#CHROM", "start", "REF", "ALT", "sample")
   
   # join predict table and vcf (vars) table by sample and position
+  #
   a.list <- list()
   
   var.split <- split.data.frame(vcf.table, vcf.table$sample)

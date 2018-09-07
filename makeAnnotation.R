@@ -119,7 +119,7 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   
   # make all variants full table
   vcf.table <- vcf2table(files.vcf)
-  vcf.table <- rename(vcf.table, start=POS)
+  colnames(vcf.table) <- c("#CHROM", "start", "REF", "ALT", "sample")
   
   # join predict table and vcf (vars) table by sample and position
   a.list <- list()

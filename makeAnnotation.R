@@ -1,10 +1,12 @@
 makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gff", nc="NC_000962", species="Mycobacterium tuberculosis", withRanges=FALSE, inRanges=NULL, writeXLSX=FALSE, outTable="annotation_table", substPart=".vcf.gz", pat=".vcf", threads=8){
   # the function makes annotation table with amino acid changes in wide format for the whole genome or for a region specified;
   # for flawless work of the function the following conditions have to be true:
-  # 1) all transformed vcf files have to be bgzipped and tabixed
+  # 1) all vcf files have to be bgzipped and tabixed
   # 2) reference genome have to be indexed with samtools faidx
-  # 3) original VCFs have to be in the CWD along with transformed, gzipped and tabixed (??? how to tell one from other?)
+  # 3) original VCFs have to be in the CWD along with gzipped and tabixed versions
+  # rrna.genes <- vector of vectors of rRNA genes' coordinates, like c(c(1471846, 1473382), c(1473658, 1476795))
   # Deprecated: 1) all vcf files were transformed with sed -i '/##/d' and have extension 'vcf'
+  
 
   # inRanges - GRanges object of regions of interest
   # example: GRanges(seqnames = "NC_000962", ranges = IRanges(start=c(3877464, 759807, 763370), end=c(3878507, 763325, 767320), names=c("rpoA", "rpoB", "rpoC")))
@@ -14,6 +16,7 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   # threads - number of threads to use in mclapply() function
   # return - a list of two tables: full annotation long and full annotation wide
   
+  # source("https://bioconductor.org/biocLite.R")
   library(parallel);  library(VariantAnnotation);  library(GenomicFeatures);  library(dplyr);  library(stringr);  library(data.table);  library(tidyr)
   #library(xlsx)
   
@@ -152,12 +155,17 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   a.full.wide <- spread(a.full, key="sample", value="Alt") %>%  arrange(Pos) #%>%  distinct(REF.x, start, GENEID.y, .keep_all=T)%>% arrange(start)
   
   # annotate rRNA genes (the following coords are suitable for M.tuberculosis only)
-  # rrs
-  a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1471846 & a.full.wide$Pos <= 1473382, "rrs", a.full.wide$GENEID)
-  # rrL
-  a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1473658 & a.full.wide$Pos <= 1476795, "rrl", a.full.wide$GENEID)
-  # rrf
-  a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1476899 & a.full.wide$Pos <= 1477013, "rrf", a.full.wide$GENEID)
+  if (species=="Mycobacterium tuberculosis"){
+    # rrs
+    a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1471846 & a.full.wide$Pos <= 1473382, "rrs", a.full.wide$GENEID)
+    # rrL
+    a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1473658 & a.full.wide$Pos <= 1476795, "rrl", a.full.wide$GENEID)
+    # rrf
+    a.full.wide$GENEID <- if_else(a.full.wide$Pos >= 1476899 & a.full.wide$Pos <= 1477013, "rrf", a.full.wide$GENEID)
+  } else {
+    print("rRNA genes will not be annotated!")
+  }
+  
   
   # deal with the cases when there are different amino acids in different samples because of different nuc substitutions in the same position
   

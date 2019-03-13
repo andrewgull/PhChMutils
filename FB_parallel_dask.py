@@ -8,7 +8,8 @@ import dask
 import time
 
 start_time = time.time()
-help_message = "FreeBayes paralleled by dask. Arguments:\n1 - list of samples' common names; one per line\n2 - number of threads\n3 - min alternate fraction (decimal format)" \
+help_message = "FreeBayes paralleled by dask. Arguments:\n1 - list of samples' common names; one per line\n2 - number " \
+               "of threads\n3 - min alternate fraction (decimal format)" \
                "\n4 - reference genome\n5 - indels (1 - yes; 0 - no)"
 if len(sys.argv) < 4:
     print(help_message)
@@ -39,6 +40,7 @@ def freebayes(sample, frac, ref):
     os.system(cmd)
     return 0
 
+
 # FB fun (no indels)
 def freebayes_noind(sample, frac, ref):
     print("sample %s is being processed... no indels mode" % sample)
@@ -60,7 +62,6 @@ else:
         total_lst.append(dask.delayed(freebayes_noind)(sample=s, frac=alt_fraction, ref=reference))
 
 total = dask.delayed(total_lst)
-#total.visualize()
 total.compute()
 
 print("Finished in %s sec" % (time.time() - start_time))

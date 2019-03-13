@@ -26,7 +26,9 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
     # transform the cell from char vector to chars
     # column arg should look like 'table$column'
     clist <- CharacterList(column)
-    mult <- elementNROWS(clist) > 1L
+    #mult <- elementNROWS(clist) > 1L
+    # for older versions of libraries or even R
+    mult <- elementLengths(clist) > 1L
     clist[mult] <- lapply(clist[mult], paste0, collapse=",")
     return(as.character(clist))
   }
@@ -47,7 +49,7 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   changeInRegion <- function(fl, rng, refgenome, annotation){
     # a function to annotate amino acid changes in specific region
     tab <- TabixFile(fl)
-    vcf.rng <- readVcf(tab, "NC_000962", param=rng)
+    vcf.rng <- readVcf(tab, nc, param=rng)
     aa <- predictCoding(vcf.rng, annotation, seqSource = refgenome)
     #aa <- as.data.frame(aa)
     aa <- as.data.frame(aa, row.names = c(1:length(aa)))
@@ -60,7 +62,7 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
     # a function to annotate amino acid changes in whole genome sequence
     #print(fl)
     tab <- TabixFile(fl)
-    vcf.rng <- readVcf(tab, "NC_000962")
+    vcf.rng <- readVcf(tab, nc)
     aa <- predictCoding(vcf.rng, anntn, seqSource = ref)
     #aa <- as.data.frame(aa)
     if (length(aa) == 0){
@@ -99,11 +101,9 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
   # bgzip and tabix all vcf files in the CWD
   # Also: 'samtools faidx genome.fna'
   # get the list of them
-  files.vcf.gz <- dir(pattern=substPart) # *vcf.gz + *vcf.gz.tbi
-  files.tbi <- dir(pattern="tbi") # *vcf.gz.tbi only
-  files.vcf.gz <- setdiff(files.vcf.gz, files.tbi) # *.vcf.gz only
-  files.vcf <- setdiff(dir(pattern=pat), files.tbi)
-  files.vcf <- setdiff(files.vcf, files.vcf.gz) # *.vcf only
+  files.vcf.gz <- dir(pattern='.vcf.gz$')
+  files.tbi <- dir(pattern=".tbi$")
+  files.vcf <- dir(pattern='.vcf$')
   
   # make annotation table for a region(s)?
   # prepare the regions
@@ -116,7 +116,12 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
     pred.full <- prettyTable(pred.full)
   } else {
     predict.list <- mclapply(files.vcf.gz, function(x){changeAll(x, refgenome, annot)}, mc.cores = threads)
-    pred.full <- rbindlist(predict.list)
+    if (length(predict.list)==1){
+      pred.full <- predict.list[[1]]
+    } else { 
+      pred.full <- rbindlist(predict.list)
+    }
+    
     pred.full <- prettyTable(pred.full)
   }
   

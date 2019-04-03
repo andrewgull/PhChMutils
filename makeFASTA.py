@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/andrew/anaconda3/bin/python3
 # make fasta file from SNPs
 # input: all vcf files
 # output: cleaned fasta
@@ -9,11 +9,10 @@ from Bio import SeqIO
 from Bio.Align import MultipleSeqAlignment
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from rpy2.robjects.packages import STAP
+# from rpy2.robjects.packages import STAP
 import pandas as pd
 import numpy as np
 import glob
-#from pathlib import Path
 
 
 def is_invariant(string):
@@ -46,15 +45,18 @@ def remove_invariant_sites(input_align):
     print("edited alignment has %i columns" % inv.get_alignment_length())
     return inv
 
+
 help_message = "Script for making fasta from vcf and NJ tree from the fasta. Works on each VCF in CWD.\n" \
                "All joined vcf (result of the longest process) will be written to a TSV file\n" \
-               "It uses R for tree building\n" \
+               "It uses R for tree building [turned off]\n" \
                "Five arguments:\n" \
                "1 - xlsx table with 'bad genes' and 'resistance' like ~/Documents/myco/bad_genes.xlsx\n" \
                "2 - xlsx with another bad genes, like ~/Documents/myco/bad_pos_genomes.xlsx\n" \
                "3 - gff file with reference annotation, like 'H37Rv.gff'\n" \
-               "4 - name for the output fasta (a tree will be named by adding '_NJ_pdist.tre' suffix to the fasta name)\n" \
+               "4 - name for the output fasta (a tree will be named by adding '_NJ_pdist.tre' " \
+               "suffix to the fasta name)\n" \
                "5 - reference genome fasta, like H37Rv.fna\n"
+
 if len(sys.argv) < 6:
     print(help_message)
     sys.exit()
@@ -71,9 +73,9 @@ except FileNotFoundError:
     print("ref genome not found!")
     sys.exit()
 
-resistance = pd.read_excel(bad_xlsx, sheet_name = "Resistance")
+resistance = pd.read_excel(bad_xlsx, sheet_name="Resistance")
 resistance = resistance.drop(['Gene','AA_exchange','KvarQ','Microbe_Predictor_TB','PhyResSE','TBProfiler'], axis=1)
-bad_genes = pd.read_excel(bad_xlsx, sheet_name = "bad_genes")
+bad_genes = pd.read_excel(bad_xlsx, sheet_name="bad_genes")
 another_bads = pd.read_excel(another_bad)
 another_bads = another_bads.drop(["genomes"], axis=1)
 # to infer coords of bad genes you need a gff file
@@ -83,20 +85,23 @@ gff = pd.read_csv(gff_name, delimiter="\t", header=None, skiprows=7, skipfooter=
 vcfs = glob.glob("*.vcf")
 print("found %i vcf files" % len(vcfs))
 print("start from %s" % vcfs[0])
-concat = pd.read_csv(vcfs[0], delimiter="\t")
-concat = concat.drop(['#CHROM', 'REF','ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'unknown'], axis=1)
+concat = pd.read_csv(vcfs[0], delimiter="\t", comment="#", names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'unknown'])
+
+concat = concat.drop(['CHROM', 'REF', 'ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'unknown'], axis=1)
 # remove ALT with length more than 1 (indels)
 concat = concat[concat['ALT'].map(len) < 2]
 # rename ALT by sample name
-concat = concat.rename(index=str, columns={"ALT":vcfs[0][:-11]})
+concat = concat.rename(index=str, columns={"ALT": vcfs[0][:-11]})
 print("concatenating vcf files...")
 n = 1
 for i in range(1, len(vcfs)):
     print("%i files added..." % n)
     try:
-        df = pd.read_csv(vcfs[i], delimiter="\t")
+        df = pd.read_csv(vcfs[i], delimiter="\t", comment="#", names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL',
+                                                                      'FILTER', 'INFO', 'FORMAT', 'unknown'])
+
         # drop useless columns
-        df = df.drop(['#CHROM', 'REF','ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'unknown'], axis=1)
+        df = df.drop(['CHROM', 'REF','ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'unknown'], axis=1)
         # drop rows with ALT len more than 1
         df = df[df['ALT'].map(len) < 2]
         # rename ALT column
@@ -134,7 +139,7 @@ for coord_pair in coords_tuples:
     concat = concat[concat["POS"].map(lambda x: x not in range(coord_pair[0], coord_pair[1]+1))]
 
 # remove useless columns 'POS', 'Antibiotic' and 'effect';
-concat = concat.drop(['POS', 'Antibiotic', 'effect'], axis=1)
+concat = concat.drop(['Antibiotic', 'effect'], axis=1)
 
 # make reference column with bases from ref corresponding positions
 ref = SeqIO.read(open(ref_genome), "fasta")
@@ -143,7 +148,10 @@ concat["REF"] = ref_column
 
 # substitute NaNs in each columns (like if_else in R)
 for name in list(concat):
-    concat[name] = np.where(pd.isnull(concat[name]), concat['REF'], concat[name])
+    try:
+        concat[name] = np.where(pd.isnull(concat[name]), concat['REF'], concat[name])
+    except ValueError:
+        print("value error - %s" % name)
 
 # drop REF column
 concat = concat.drop(["REF"], axis=1)
@@ -151,7 +159,7 @@ concat = concat.drop(["REF"], axis=1)
 concat.to_csv("concatenated_"+str(len(vcfs))+"vcf.tsv", sep="\t", index=False)
 # collect columns as character strings
 records = []
-for col in list(concat)[1:]:
+for col in list(concat)[:len(list(concat))-1]:
     snps = list(concat[col])
     snps = Seq("".join(snps))
     rec = SeqRecord(snps, id=col, description="")
@@ -174,6 +182,6 @@ buildNJ <- function(in.fa.file){
 }
 """
 
-buildTree = STAP(buildNJ_R, "buildTree")
-buildTree.buildNJ(fasta_out)
-print("Done! NJ tree is ready")
+# buildTree = STAP(buildNJ_R, "buildTree")
+# buildTree.buildNJ(fasta_out)
+print("Done! NJ building was turned off")

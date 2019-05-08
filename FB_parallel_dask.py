@@ -51,7 +51,7 @@ def freebayes_noind(sample, frac, ref):
 
 
 # run in parallel
-dask.set_options(pool=ThreadPool(threads))
+dask.config.set(pool=ThreadPool(threads))
 total_lst = []
 if indels == "1":
     # with indels

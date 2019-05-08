@@ -76,8 +76,8 @@ resist2GRanges <- function(resdf){
 # a function uniting all other R functions need for annotation
 fullAnnotation = """
 fullAnnotationInGRanges <- function(resistance_table){
-  source("makeAnnotation.R")
-  source("resist2GRanges.R")
+  source("/home/gulyaev/bin/makeAnnotation.R")
+  source("/home/gulyaev/bin/resist2GRanges.R")
   resist_ranges <- resist2GRanges(resistance_table)
   annots <- makeAnnotation(withRanges=TRUE, inRanges=resist_ranges, outTable="annotation_rpoABC")
   
@@ -86,9 +86,9 @@ fullAnnotationInGRanges <- function(resistance_table){
 
 R_Annot = STAP(fullAnnotation, "R_Annot")
 
-help_message = "Script for annotating AA-changes in AB-resistance regions, v 0.4\n" \
+help_message = "Script for annotating AA-changes in AB-resistance regions, v 0.5\n" \
                "VCF files are taken from the CWD\n" \
-               "Three R functions should be in the CWD\n" \
+               "Three R functions should be in ~/bin\n" \
                "Four arguments have to be passed:\n" \
                "1 - xlsx table with resistance mutations (resistance_SNPs_withoutrpoAC.xlsx - take care of the table's footer!)\n" \
                "2 - reference genome accession (NC_000962)\n" \
@@ -131,21 +131,19 @@ mut_pos = res_tab["Pos"]
 
 # run the 'makeannotation.R' in specified GRanges for all the VCF files in the directory
 # first check if R functions are in CWD
-r_func = glob.glob("*.R")
-if "makeAnnotation.R" and "resist2GRanges.R" not in r_func:
-    print("Essential R functions not found!")
-    sys.exit()
+# r_func = glob.glob("*.R")
+if os.path.isfile("/home/gulyaev/bin/makeAnnotation.R") and os.path.isfile("/home/gulyaev/bin/resist2GRanges.R") and os.path.isfile("/home/gulyaev/bin/fullAnnotationInGRanges.R"):
+    print("essential R functions found in /home/gulayev/bin")
+else:
+    print("Essential R functions not found in $USER/bin.\nTry to find in CWD...")
 
-#### BUT before you have to transform all the VCFs
-#### Now you haven't do transformation
-# print("vcf transformation...")
-# transform_vcf(vcf_files)
+    sys.exit(1)
 
 # make copies of transformed vcfs
-os.mkdir("vcf_backup")
-for f in vcf_files:
-    copy(f, "vcf_backup/"+f)
-print("VCFs were copied to ./vcf_backup")
+# os.mkdir("vcf_backup")
+# for f in vcf_files:
+#    copy(f, "vcf_backup/"+f)
+# print("VCFs were copied to ./vcf_backup")
 
 #### Then bgzip and tabix 'em
 print("vcf bgzipping and tabixing...")
@@ -197,7 +195,7 @@ joiner = STAP(join_tables, "joiner")
 
 # and run it
 print("joining tables...")
-joiner.join_tables("~/Documents/myco/compensatory/resistance_SNPs_withoutrpoAC.xlsx", "annotation_rpoABC.tsv")
+joiner.join_tables(r_tab, "annotation_rpoABC.tsv")
 
 # after joined table is written you can read it and iterate
 

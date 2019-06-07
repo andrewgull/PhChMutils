@@ -14,7 +14,7 @@ from multiprocessing.pool import ThreadPool
 
 
 # read a list of files to dump
-help_message = "DownMapVCall - a pipeline to get VCFs starting from SRA-dumping. " \
+help_message = "DMVC (Downloading-Mapping-VariantCalling)- a pipeline to get VCFs starting from SRA-dumping. " \
                "Removes reads and BAMs to keep disk space. " \
                "Arguments:\n1 - list of samples' common names; one per line\n" \
                "2 - number of threads\n" \

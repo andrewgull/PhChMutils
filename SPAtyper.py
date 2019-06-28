@@ -121,6 +121,6 @@ for subject in subs:
 with open("analysis_result.tsv", "w") as out:
     for line in out_list:
         out.write("%s\n" % line)
-print("Analysis finished successfully.\nSee 'analysis_results.tsv' for details"
+print("Analysis finished successfully.\nSee 'analysis_results.tsv' for details")
 # Windows CMD finish
 #x = input("Done! See 'analysis_result.tsv'\nPress any key to exit")

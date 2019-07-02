@@ -8,9 +8,12 @@ import dask
 import time
 
 start_time = time.time()
-help_message = "FreeBayes paralleled by dask. Arguments:\n1 - list of samples' common names; one per line\n2 - number " \
-               "of threads\n3 - min alternate fraction (decimal format)" \
-               "\n4 - reference genome\n5 - indels (1 - yes; 0 - no)"
+help_message = "FreeBayes paralleled by dask, v. 1.01. Arguments:\n" \
+               "1 - list of samples' common names; one per line\n" \
+               "2 - number of threads\n" \
+               "3 - min alternate fraction (decimal format)\n" \
+               "4 - reference genome\n" \
+               "5 - indels (1, yes, y - report indels; 0, no, n - do not report indels)"
 if len(sys.argv) < 4:
     print(help_message)
     sys.exit()
@@ -53,15 +56,20 @@ def freebayes_noind(sample, frac, ref):
 # run in parallel
 dask.config.set(pool=ThreadPool(threads))
 total_lst = []
-if indels == "1":
+if indels == "1" or indels == "yes" or indels == "y":
     # with indels
     for s in cmn_names:
         total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference))
-else:
+elif indels == '0' or indels == 'no' or indels == 'n':
     for s in cmn_names:
         total_lst.append(dask.delayed(freebayes_noind)(sample=s, frac=alt_fraction, ref=reference))
+else:
+    print("'indels' argument was not recognised."
+          "Use either 'yes', 'y' or '1' to report indels or 'no', 'n' or '0' to not report them")
+    sys.exit()
 
 total = dask.delayed(total_lst)
 total.compute()
+t = time.time() - start_time
 
-print("Finished in %s sec" % (time.time() - start_time))
+print("Finished in %s sec / %s m / %s h" % (str(t), str(t/60), str(t/3600)))

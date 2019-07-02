@@ -8,7 +8,7 @@ import dask
 import time
 
 start_time = time.time()
-help_message = "FreeBayes paralleled by dask, v. 1.01. Arguments:\n" \
+help_message = "FreeBayes paralleled by dask, v. 1.02. Arguments:\n" \
                "1 - list of samples' common names; one per line\n" \
                "2 - number of threads\n" \
                "3 - min alternate fraction (decimal format)\n" \
@@ -35,21 +35,26 @@ with open(filename) as f:
 cmn_names = [x.strip() for x in cmn_names]
 
 
-# FB fun (with indels)
-def freebayes(sample, frac, ref):
-    print("sample %s is being processed... indels mode" % sample)
-    cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
-          "--haplotype-length -1 --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample,  sample)
-    os.system(cmd)
-    return 0
-
-
-# FB fun (no indels)
-def freebayes_noind(sample, frac, ref):
-    print("sample %s is being processed... no indels mode" % sample)
-    cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
-          "--haplotype-length -1 --no-indels --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample,  sample)
-    os.system(cmd)
+# FB function
+def freebayes(sample, frac, ref, ind):
+    """
+    function to run FreeBayes
+    :param sample: a name of a BAM file (without extension)
+    :param frac: min alternate fraction (in decimal format)
+    :param ref: reference genome
+    :param ind: report indels (boolean)
+    :return: 0
+    """
+    if ind:
+        print("sample %s is being processed... indels mode" % sample)
+        cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
+              "--haplotype-length -1 --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample,  sample)
+        os.system(cmd)
+    else:
+        print("sample %s is being processed... no indels mode" % sample)
+        cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
+              "--haplotype-length -1 --no-indels --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample, sample)
+        os.system(cmd)
     return 0
 
 
@@ -57,12 +62,11 @@ def freebayes_noind(sample, frac, ref):
 dask.config.set(pool=ThreadPool(threads))
 total_lst = []
 if indels == "1" or indels == "yes" or indels == "y":
-    # with indels
     for s in cmn_names:
-        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference))
+        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference, ind=True))
 elif indels == '0' or indels == 'no' or indels == 'n':
     for s in cmn_names:
-        total_lst.append(dask.delayed(freebayes_noind)(sample=s, frac=alt_fraction, ref=reference))
+        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference, ind=False))
 else:
     print("'indels' argument was not recognised."
           "Use either 'yes', 'y' or '1' to report indels or 'no', 'n' or '0' to not report them")

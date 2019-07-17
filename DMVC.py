@@ -15,7 +15,7 @@ from multiprocessing.pool import ThreadPool
 
 # read a list of files to dump
 help_message = "DMVC (Downloading-Mapping-VariantCalling)- a pipeline to get VCFs starting from SRA-dumping. " \
-               "Removes reads and BAMs to keep disk space. " \
+               "It removes reads and BAMs to keep disk space. " \
                "Arguments:\n1 - list of samples' common names; one per line\n" \
                "2 - number of threads\n" \
                "3 - reference genome\n" \
@@ -112,7 +112,7 @@ if dump == 1 or dump == "yes":
     cache_path = '/data5/bio/MolGenMicro/ncbi_cache/sra/'
     os.system('rm %s*.sra' % cache_path)
 else:
-    print("No dumping was selected. Go to mapping.")
+    print("No dumping was selected. Start mapping.")
 
 # start mapping
 # build index

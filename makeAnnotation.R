@@ -26,9 +26,9 @@ makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gf
     # transform the cell from char vector to chars
     # column arg should look like 'table$column'
     clist <- CharacterList(column)
-    #mult <- elementNROWS(clist) > 1L
+    mult <- elementNROWS(clist) > 1L
     # for older versions of libraries or even R
-    mult <- elementLengths(clist) > 1L
+    #mult <- elementLengths(clist) > 1L
     clist[mult] <- lapply(clist[mult], paste0, collapse=",")
     return(as.character(clist))
   }

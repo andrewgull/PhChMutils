@@ -91,7 +91,7 @@ concat = concat.drop(['CHROM', 'REF', 'ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 
 # remove ALT with length more than 1 (indels)
 concat = concat[concat['ALT'].map(len) < 2]
 # rename ALT by sample name
-concat = concat.rename(index=str, columns={"ALT": vcfs[0][:-11]})
+concat = concat.rename(index=str, columns={"ALT": vcfs[0][:-7]})
 print("concatenating vcf files...")
 n = 1
 for i in range(1, len(vcfs)):
@@ -105,7 +105,7 @@ for i in range(1, len(vcfs)):
         # drop rows with ALT len more than 1
         df = df[df['ALT'].map(len) < 2]
         # rename ALT column
-        df = df.rename(index=str, columns={"ALT":vcfs[i][:-11]})
+        df = df.rename(index=str, columns={"ALT":vcfs[i][:-7]})
         concat = pd.merge(concat, df, on="POS", how="outer")
         n += 1
     except pd.errors.EmptyDataError:

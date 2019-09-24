@@ -133,7 +133,7 @@ def make_phylo_table(ph_table, filter):
 
 
 if __name__ == '__main__':
-    help_message = "At least two arguments needed:\n1 - path to phylo table, like ~/Documents/myco/compensatory/phylogenetic_snps_62.csv\n2 - output file name"
+    help_message = "Provide the following argumets:\n1 - path to phylo table, like ~/Documents/myco/compensatory/phylogenetic_snps_62.csv\n2 - output file name"
     if len(sys.argv) < 3:
         print(help_message)
         sys.exit()

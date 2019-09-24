@@ -62,7 +62,8 @@ def find_longest_tandem(csv_tab):
         return out
 
 
-help_message = "Error! At least two arguments required:\n1 - query name (a collection of SPA repeats)\n2 - min length of a repeat"
+help_message = "Error! At least two arguments required:\n1 - query name (a collection of SPA repeats)\n" \
+               "2 - min length of a repeat"
 if len(sys.argv) < 3:
     print(help_message)
     sys.exit()

@@ -1,4 +1,4 @@
-makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gff", nc="NC_000962", species="Mycobacterium tuberculosis", withRanges=FALSE, inRanges=NULL, writeXLSX=FALSE, outTable="annotation_table", substPart=".vcf.gz", pat=".vcf", threads=8){
+makeAnnotation <- function(ref.genome.name="H37Rv.fna", ref.annotation="H37Rv.gff", nc="NC_000962", species="Mycobacterium tuberculosis", withRanges=FALSE, inRanges=NULL, writeXLSX=FALSE, outTable="SNP_annotation_table", substPart=".vcf.gz", pat=".vcf", threads=8){
   # the function makes annotation table with amino acid changes in wide format for the whole genome or for a region specified;
   # for flawless work of the function the following conditions have to be true:
   # 1) all vcf files have to be bgzipped and tabixed

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # script for running FreeBayes in parallel
 
 from multiprocessing.pool import ThreadPool
@@ -8,7 +8,7 @@ import dask
 import time
 
 start_time = time.time()
-help_message = "FreeBayes paralleled by dask, v. 1.02. Arguments:\n" \
+help_message = "FreeBayes paralleled by dask, v. 1.03. Arguments:\n" \
                "1 - list of samples' common names; one per line\n" \
                "2 - number of threads\n" \
                "3 - min alternate fraction (decimal format)\n" \

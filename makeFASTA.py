@@ -1,4 +1,5 @@
-#!/home/andrew/anaconda3/bin/python3
+#!/usr/bin/env python3
+
 # make fasta file from SNPs
 # input: all vcf files
 # output: cleaned fasta

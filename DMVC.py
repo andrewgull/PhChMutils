@@ -1,4 +1,5 @@
-#! /srv/common/bin/python3
+#!/usr/bin/env python3
+
 # a big pipeline to
 # 1) take a bunch of sra reads to dump;
 # 2) then to map them;

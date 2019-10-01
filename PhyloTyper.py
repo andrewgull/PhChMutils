@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # The script is for assigning each sample to phylo lineage by specific SNPs
 # Also it removes samples that got different lineages' signatures
@@ -11,6 +11,7 @@ from collections import defaultdict
 import re
 import numpy as np
 import sys
+import os
 
 
 def dict_reverse(d):
@@ -24,6 +25,7 @@ def dict_reverse(d):
         for v in d[k]:
             d_rev[v].append(k)
     return d_rev
+
 
 def filter_mixed_samples(smpl_dict, *params):
     """
@@ -55,6 +57,7 @@ def filter_mixed_samples(smpl_dict, *params):
         del smpl_dict[bad]
         # sample_dict.pop(bad, None)
     return smpl_dict, bad_samples
+
 
 def make_phylo_table(ph_table, filter):
     # read the lineage table
@@ -133,13 +136,19 @@ def make_phylo_table(ph_table, filter):
 
 
 if __name__ == '__main__':
-    help_message = "Provide the following argumets:\n1 - path to phylo table, like ~/Documents/myco/compensatory/phylogenetic_snps_62.csv\n2 - output file name"
-    if len(sys.argv) < 3:
+    help_message = "Script for assigning phylogenetic lineages to samples' VCF files.\n" \
+                   "Works on all the VCFs in a directory, outputs a CSV table\n" \
+                   "Required arguments: output file name"
+    if len(sys.argv) < 2:
         print(help_message)
         sys.exit()
 
-    phylo_table_path = sys.argv[1] # "~/Documents/myco/compensatory/phylogenetic_snps_62.csv"
-    output = sys.argv[2]
+    phylo_table_path = "/data5/bio/MolGenMicro/mycobacterium/phylogenetic_snps_62.csv"
+    if not os.path.isfile(phylo_table_path):
+        print("File %s not found!" % phylo_table_path)
+        phylo_table_path = input("Enter full path to the phylogenetic snps file > ")
+    # phylo_table_path = sys.argv[1] # "~/Documents/myco/compensatory/phylogenetic_snps_62.csv"
+    output = sys.argv[1]
     phylo_table = make_phylo_table(ph_table=phylo_table_path, filter=False)
     phylo_table.to_csv(output, index=False)
     print("Done!")

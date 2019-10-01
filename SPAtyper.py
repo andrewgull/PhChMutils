@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 # arg1: query
 # arg2: min length of the repeat
 
@@ -124,4 +124,4 @@ with open("analysis_result.tsv", "w") as out:
         out.write("%s\n" % line)
 print("Analysis finished successfully.\nSee 'analysis_results.tsv' for details")
 # Windows CMD finish
-#x = input("Done! See 'analysis_result.tsv'\nPress any key to exit")
+# x = input("Done! See 'analysis_result.tsv'\nPress any key to exit")

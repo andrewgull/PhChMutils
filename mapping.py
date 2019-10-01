@@ -7,7 +7,7 @@ help_message = "Script for mapping reads with bowtie2 and processing with samtoo
                "Four arguments have to be passed:\n" \
                "1 - paired or not? (p/P - for paired reads, u/U - for unpaired)\n" \
                "2 - file with samples' names, one per line\n" \
-               "3 - genome index base name (use 'bowtie2-build genome index_name')\n" \
+               "3 - genome index base name (use 'bowtie2-build genome index_base_name')\n" \
                "4 - number of threads"
 
 if len(sys.argv) < 5:
@@ -20,7 +20,7 @@ ref_index = sys.argv[3]
 threads = sys.argv[4]
 
 
-def bowtie(read_file, cpus, index, paired=True):
+def bowtie(read_file, cpus, index, paired):
 
     if paired:
         r1 = read_file + '_1.fastq.gz'
@@ -49,17 +49,23 @@ def samtools(read_file, cpus):
 
 samples = [line.rstrip() for line in open(samples_file).readlines()]
 
-if read_type == 'p' or 'P':
+if read_type == 'p' or read_type == 'P':
     print("Found %i pairs of files..." % len(samples))
+    for S in samples:
+        bowtie(S, threads, ref_index, paired=True)
+        samtools(S, threads)
 else:
     print("Found %i files..." % len(samples))
-
-for S in samples:
-    if read_type == 'p' or 'P':
-        bowtie(S, threads, ref_index, paired=True)
-    else:
+    for S in samples:
         bowtie(S, threads, ref_index, paired=False)
+        samtools(S, threads)
 
-    samtools(S, threads)
+# for S in samples:
+#     if read_type == 'p' or 'P':
+#         bowtie(S, threads, ref_index, paired=True)
+#     else:
+#         bowtie(S, threads, ref_index, paired=False)
 
-print("Mapping finished successfully")
+#    samtools(S, threads)
+
+print("Mapping finished")

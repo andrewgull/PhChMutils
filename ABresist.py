@@ -1,4 +1,4 @@
-#!/srv/common/bin/python3
+#!/usr/bin/env python3
 
 # script for AB resistance
 # it should transform vcf with 'transform_vcf.sh'

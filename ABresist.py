@@ -54,6 +54,8 @@ def get_column(csv_tab, column):
     return col
 
 
+user_name = os.getlogin()
+
 # here goes a function to make GRanges object of AB-resistance genes
 resist2GRanges = """
 resist2GRanges <- function(resdf){
@@ -76,17 +78,17 @@ resist2GRanges <- function(resdf){
 # a function uniting all other R functions need for annotation
 fullAnnotation = """
 fullAnnotationInGRanges <- function(resistance_table){
-  source("/home/gulyaev/bin/makeAnnotation.R")
-  source("/home/gulyaev/bin/resist2GRanges.R")
+  source("/home/%s/bin/makeAnnotation.R")
+  source("/home/%s/bin/resist2GRanges.R")
   resist_ranges <- resist2GRanges(resistance_table)
   annots <- makeAnnotation(withRanges=TRUE, inRanges=resist_ranges, outTable="annotation_rpoABC")
   
 }
-"""
+""" % (user_name, user_name)
 
 R_Annot = STAP(fullAnnotation, "R_Annot")
 
-help_message = "Script for annotating AA-changes in AB-resistance regions, v 0.5\n" \
+help_message = "Script for annotating AA-changes in AB-resistance regions, v 1.0\n" \
                "VCF files are taken from the CWD\n" \
                "Three R functions should be in ~/bin\n" \
                "Four arguments have to be passed:\n" \
@@ -94,71 +96,46 @@ help_message = "Script for annotating AA-changes in AB-resistance regions, v 0.5
                "2 - reference genome accession (NC_000962)\n" \
                "3 - reference genome fasta (H37Rv.fna)\n" \
                "4 - reference genome annotation (H37Rv.gff)"
-if len(sys.argv) < 5:
+
+if len(sys.argv) < 4:
     print(help_message)
     sys.exit()
 
 # check how many vcf files have SNPs in resistance table
 # read table and files and check whether they have AB mutations
+r_tab = "/data5/bio/MolGenMicro/mycobacterium/resistance_SNPs_withoutrpoAC.xlsx"
 
-r_tab = sys.argv[1]
+if not os.path.isfile(r_tab):
+    print("Resistance file %s not found" % r_tab)
+    r_tab = input("Enter full path to the file > ")
+
 vcf_files = sorted(glob.glob("*.vcf"))
-#vcf_files = [v[:-4] for v in vcf_files]
-genome_nc = sys.argv[2]
-genome_fa = sys.argv[3]
-genome_gff = sys.argv[4]
+genome_nc = sys.argv[1]
+genome_fa = sys.argv[2]
+genome_gff = sys.argv[3]
 
 # read resistance table and collect genomic positions from there
-# TAKE CARE of footer
+# TAKE CARE of the footer
 res_tab = pd.read_excel(r_tab, skip_footer=32)
 mut_pos = res_tab["Pos"]
 
-# count VCF files with AB-resistance mutations
-# if any mutation found, go to the next file
-#resistant_files = []
-# for file in vcf_files:
-#     n = 0
-#     for pos in mut_pos:
-#         if n == 0:
-#             with open(file) as f:
-#                 str_to_look = genome_nc + "\t" + str(pos)
-#                 if str_to_look in f.read():
-#                     resistant_files.append(file)
-#                     n += 1
-#
-# print("AB-resistance mutations found in %i" % len(resistant_files))
-# test set of files has only 11 ones
+r_functions = ["/home/%s/bin/makeAnnotation.R" % user_name, "/home/%s/bin/resist2GRanges.R" % user_name,
+               "/home/%s/bin/fullAnnotationInGRanges.R" % user_name]
 
-# run the 'makeannotation.R' in specified GRanges for all the VCF files in the directory
-# first check if R functions are in CWD
-# r_func = glob.glob("*.R")
-if os.path.isfile("/home/gulyaev/bin/makeAnnotation.R") and os.path.isfile("/home/gulyaev/bin/resist2GRanges.R") and os.path.isfile("/home/gulyaev/bin/fullAnnotationInGRanges.R"):
-    print("essential R functions found in /home/gulayev/bin")
-else:
-    print("Essential R functions not found in $USER/bin.\nTry to find in CWD...")
+for fun in r_functions:
+    if not os.path.isfile(fun):
+        print("file %s not found" % fun)
+        sys.exit(1)
 
-    sys.exit(1)
-
-# make copies of transformed vcfs
-# os.mkdir("vcf_backup")
-# for f in vcf_files:
-#    copy(f, "vcf_backup/"+f)
-# print("VCFs were copied to ./vcf_backup")
-
-#### Then bgzip and tabix 'em
+# bgzip and tabix VCF files
 print("vcf bgzipping and tabixing...")
 bgzip_and_tabix(vcf_files)
 
-#### index the genome
-if len(glob.glob("*.fai"))==0:
+# index the genome
+if len(glob.glob("*.fai")) == 0:
     os.system("samtools faidx %s" % genome_fa)
 
-# copy backup to CWD
-for f in vcf_files:
-    copy("vcf_backup/"+f, "./")
-print("VCFs restored")
-
-print("R annotation...")
+print("Annotation...")
 R_Annot.fullAnnotationInGRanges(r_tab)
 
 # Table with resistance
@@ -246,7 +223,6 @@ rpoC = (763370,767320)
 
 # make such blank table (=dict)
 rpo_dict = defaultdict(list)
-#rpo_dict["samples"] = samples
 
 for v in vcf_files:
     print(v)

@@ -62,8 +62,12 @@ def find_longest_tandem(csv_tab):
         return out
 
 
-help_message = "Error! At least two arguments required:\n1 - query name (a collection of SPA repeats)\n" \
+help_message = "Script to run blastn against all the fasta files in a directory (except the query you have to specify)" \
+               "and parsing its output to get a SPA-type\n" \
+               "Two arguments required:\n" \
+               "1 - query name (a collection of SPA repeats in fasta format)\n" \
                "2 - min length of a repeat"
+
 if len(sys.argv) < 3:
     print(help_message)
     sys.exit()

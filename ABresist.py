@@ -18,18 +18,6 @@ import csv
 from collections import defaultdict
 
 
-def transform_vcf(files):
-    """
-    function to remove from vcf all the lines starting with '##'
-    do it with sed
-    :return: no
-    """
-    for f in files:
-        cmd = "sed -i '/##/d' %s" % f
-        os.system(cmd)
-    print("transformation of VCFs is finished")
-
-
 def bgzip_and_tabix(files):
     """
     fun to bgzip and tabix transformed VCFs
@@ -92,10 +80,9 @@ help_message = "Script for annotating AA-changes in AB-resistance regions, v 1.0
                "VCF files are taken from the CWD\n" \
                "Three R functions should be in ~/bin\n" \
                "Four arguments have to be passed:\n" \
-               "1 - xlsx table with resistance mutations (resistance_SNPs_withoutrpoAC.xlsx - take care of the table's footer!)\n" \
-               "2 - reference genome accession (NC_000962)\n" \
-               "3 - reference genome fasta (H37Rv.fna)\n" \
-               "4 - reference genome annotation (H37Rv.gff)"
+               "1 - reference genome accession (NC_000962)\n" \
+               "2 - reference genome fasta (H37Rv.fna)\n" \
+               "3 - reference genome annotation (H37Rv.gff)"
 
 if len(sys.argv) < 4:
     print(help_message)
@@ -128,8 +115,11 @@ for fun in r_functions:
         sys.exit(1)
 
 # bgzip and tabix VCF files
-print("vcf bgzipping and tabixing...")
-bgzip_and_tabix(vcf_files)
+if len(glob.glob("*.tbi")) != len(vcf_files):
+    print("vcf bgzipping and tabixing...")
+    bgzip_and_tabix(vcf_files)
+else:
+    print("Found indexed VCF files, skip indexing...")
 
 # index the genome
 if len(glob.glob("*.fai")) == 0:

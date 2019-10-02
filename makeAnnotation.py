@@ -5,6 +5,9 @@ import glob
 import os
 import getpass
 import sys
+import warnings
+from rpy2.rinterface import RRuntimeWarning
+warnings.filterwarnings("ignore", category=RRuntimeWarning)
 
 
 def bgzip_and_tabix(files):

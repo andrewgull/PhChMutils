@@ -13,6 +13,7 @@ import glob
 import os
 import re
 import sys
+import getpass
 from shutil import copy
 import csv
 from collections import defaultdict
@@ -42,26 +43,7 @@ def get_column(csv_tab, column):
     return col
 
 
-user_name = os.getlogin()
-
-# here goes a function to make GRanges object of AB-resistance genes
-resist2GRanges = """
-resist2GRanges <- function(resdf){
-  # a function to make IRanges object of AB-resistance genes 
-  # first three column names: "Genome position", "Gene", "AA exchange"
-  
-  # inRanges - GRanges object of regions of interest
-  # example: GRanges(seqnames = "NC_000962", ranges = IRanges(start=c(3877464, 759807, 763370), end=c(3878507, 763325, 767320), names=c("rpoA", "rpoB", "rpoC")))
-  
-  resdf <- resdf[,c(1:3)]
-  genes <- unique(resdf[,2])
-  res.list <- split(resdf, resdf$Gene)
-  gene.starts <- sapply(res.list, function(x){min(x[,1])})
-  gene.ends <- sapply(res.list, function(x){max(x[,1])})
-  range_obj <- inRanges <- GRanges(seqnames="NC_000962", ranges=IRanges(start=gene.starts, end=gene.ends, names=sort(genes$Gene)))
-  return(range_obj)
-}
-"""
+user_name = getpass.getuser()
 
 # a function uniting all other R functions need for annotation
 fullAnnotation = """

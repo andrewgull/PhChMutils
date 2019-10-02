@@ -15,6 +15,6 @@ resist2GRanges <- function(resdf_name, row_max=1370){
   res.list <- split(resdf, resdf$Gene)
   gene.starts <- sapply(res.list, function(x){min(x[,1])})
   gene.ends <- sapply(res.list, function(x){max(x[,1])})
-  range_obj <- inRanges <- GRanges(seqnames="NC_000962", ranges=IRanges(start=gene.starts, end=gene.ends, names=sort(genes$Gene)))
+  range_obj <- GRanges(seqnames="NC_000962", ranges=IRanges(start=gene.starts, end=gene.ends, names=sort(genes)))
   return(range_obj)
 }

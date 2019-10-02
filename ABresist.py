@@ -8,6 +8,7 @@
 
 
 from rpy2.robjects.packages import STAP
+import rpy2.robjects
 import pandas as pd
 import glob
 import os
@@ -17,6 +18,9 @@ import getpass
 from shutil import copy
 import csv
 from collections import defaultdict
+import warnings
+from rpy2.rinterface import RRuntimeWarning
+warnings.filterwarnings("ignore", category=RRuntimeWarning)
 
 
 def bgzip_and_tabix(files):

@@ -55,7 +55,7 @@ Various scripts for my projects in Physical-Chemical Medicine Institution:
 
 - `bgzip_and_tabix.sh` - bgzip and tabix all the VCF in a directory.
 
-- `snps2vcf.R` - very short script to convert SFF files to FASTQ (implies a certain level of your laziness).
+- `sff2fq.R` - very short script to convert SFF files to FASTQ (implies a certain level of your laziness).
 
 - `collineariser.py` - a script to make meta alignment from MAUVE output files.
                        Useful for making split-graphs of bacteriophages' genomes.

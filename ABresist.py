@@ -78,7 +78,7 @@ R_Annot = STAP(fullAnnotation, "R_Annot")
 
 help_message = "Script for annotating AA-changes in AB-resistance regions, v 1.2\n" \
                "VCF files are taken from the CWD\n" \
-               "Resistance is taken from resistance_SNPs_withoutrpoAC.csv table"
+               "Resistance is taken from resistance_SNPs_withoutrpoAC.csv table\n" \
                "Three R functions should be in ~/bin\n" \
                "Four arguments have to be passed:\n" \
                "1 - reference genome accession (NC_000962)\n" \
@@ -104,7 +104,7 @@ genome_gff = sys.argv[3]
 
 # read resistance table and collect genomic positions from there
 # TAKE CARE of the footer
-res_tab = pd.read_excel(r_tab, skip_footer=32)
+res_tab = pd.read_csv(r_tab, nrows=1370, delimiter='\t')
 mut_pos = res_tab["Pos"]
 
 r_functions = ["/home/%s/bin/makeAnnotation.R" % user_name, "/home/%s/bin/resist2GRanges.R" % user_name,
@@ -146,8 +146,9 @@ join_tables = """
 join_tables <- function(path1, path2){
   # function to join tables: path1 = path to AB resist - "~/Documents/myco/compensatory/resistance_SNPs_withoutrpoAC.csv";
   # path2 = path to annotation table - "./annotation_table.tsv"
-  library(readxl); library(dplyr)
-  resistanceSNP <- read_excel(path1,range = "A1:D1371")
+  library(dplyr)
+  resistanceSNP <- read.csv(path1, nrows=1370, sep='\t')
+  resistanceSNP <- resistanceSNP[,c(1:4)]
   annotation_table <- read.delim(path2)
   # join your annotation with resistance table
   both <- left_join(annotation_table, resistanceSNP, by="Pos")

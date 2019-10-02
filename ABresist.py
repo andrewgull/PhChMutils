@@ -76,8 +76,9 @@ fullAnnotationInGRanges <- function(resistance_table){
 
 R_Annot = STAP(fullAnnotation, "R_Annot")
 
-help_message = "Script for annotating AA-changes in AB-resistance regions, v 1.0\n" \
+help_message = "Script for annotating AA-changes in AB-resistance regions, v 1.2\n" \
                "VCF files are taken from the CWD\n" \
+               "Resistance is taken from resistance_SNPs_withoutrpoAC.csv table"
                "Three R functions should be in ~/bin\n" \
                "Four arguments have to be passed:\n" \
                "1 - reference genome accession (NC_000962)\n" \
@@ -90,7 +91,7 @@ if len(sys.argv) < 4:
 
 # check how many vcf files have SNPs in resistance table
 # read table and files and check whether they have AB mutations
-r_tab = "/data5/bio/MolGenMicro/mycobacterium/resistance_SNPs_withoutrpoAC.xlsx"
+r_tab = "/data5/bio/MolGenMicro/mycobacterium/resistance_SNPs_withoutrpoAC.csv"
 
 if not os.path.isfile(r_tab):
     print("Resistance file %s not found" % r_tab)
@@ -143,7 +144,7 @@ print("making resistance table...")
 # R function to join annotation and AB resistance tables
 join_tables = """
 join_tables <- function(path1, path2){
-  # function to join tables: path1 = path to AB resist - "~/Documents/myco/compensatory/resistance_SNPs_withoutrpoAC.xlsx";
+  # function to join tables: path1 = path to AB resist - "~/Documents/myco/compensatory/resistance_SNPs_withoutrpoAC.csv";
   # path2 = path to annotation table - "./annotation_table.tsv"
   library(readxl); library(dplyr)
   resistanceSNP <- read_excel(path1,range = "A1:D1371")

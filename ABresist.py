@@ -134,7 +134,7 @@ join_tables <- function(path1, path2){
   annotation_table <- read.delim(path2)
   # join your annotation with resistance table
   both <- left_join(annotation_table, resistanceSNP, by="Pos")
-  both <- select(both, c(Gene, `AA exchange`, Antibiotic), everything())
+  both <- select(both, c(Gene, AA.exchange, Antibiotic), everything())
   #n <- colnames(both)[4:16]
   both <- select(both, c(Chrom, Pos, Ref, strand, CDSLOC.start, CDSLOC.end, PROTEINLOC, GENEID, CONSEQUENCE, REFCODON, VARCODON, REFAA, VARAA), everything())
   write.csv(both, "annotation+resistance.csv", row.names=F, quote=F, na="")

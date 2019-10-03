@@ -1,5 +1,34 @@
 # PhChMutils
-Various scripts for my projects in Physical-Chemical Medicine Institution:
+Various scripts for my projects in Physical-Chemical Medicine Institution.
+
+Dependencies:
+
+   - Python:
+   
+     1. dask
+     2. pandas
+     3. numpy
+     4. biopython
+     5. rpy2
+     
+   - R:
+     1. VariantAnnotation
+     2. GenomicFeatures
+     3. data.table
+     4. dplyr
+     5. tidyr
+     6. GenomicRanges
+     7. IRanges
+     8. stringr
+     
+   - standalone tools:
+     1. samtools
+     2. bowtie2
+     3. FreeBayes
+     4. bgzip
+     5. tabix
+
+Description of the scripts:
 
 - `FB_parallel_dask.py` - to run FreeBayes in parallel using *dask*.
                           Run it without any args to see the help message.

@@ -12,55 +12,57 @@ import os
 import glob
 import dask
 from multiprocessing.pool import ThreadPool
+import time
 
 
-# read a list of files to dump
-help_message = "DMVC (Downloading-Mapping-VariantCalling)- a pipeline to get VCFs starting from SRA-dumping. " \
-               "It removes reads and BAMs to keep disk space. " \
-               "Arguments:\n1 - list of samples' common names; one per line\n" \
+help_message = "DMVC (Download-Map-Call)- a pipeline to get VCFs starting from fastq-dumping.\n" \
+               "It removes reads and BAMs to keep disk space.\n" \
+               "Required arguments:\n" \
+               "1 - list of samples' common names; one per line\n" \
                "2 - number of threads\n" \
                "3 - reference genome\n" \
-               "4 - min alternate fraction for FreeBayes (decimal format)\n" \
-               "5 - look for indels? (1 - yes; 0 - no)\n" \
-               "6 - fastq-dump? (1 -yes; 0 - no)"
+               "4 - reference genome index name\n" \
+               "5 - min alternate fraction for FreeBayes (decimal format)\n" \
+               "6 - look for indels? (1/yes - yes; 0/no - no)\n" \
+               "7 - fastq-dump? (1/yes - yes; 0/no - no)\n" \
+               "8 - read type (p/paired - for paired reads, u/U - for unpaired)\n" \
+               "9 - remove FASTQ and BAM files? (y/yes/clean/remove, n/no)\n" \
+               "Example command:\n" \
+               "DMVC.py samples.txt 6 H37Rv.fna H37Rv.idx 0.9 yes yes p no"
 
 # check args
-if len(sys.argv) < 5:
+if len(sys.argv) < 7:
     print(help_message)
     sys.exit()
 
-# check file with names
-try:
-    filename = sys.argv[1]
-except FileNotFoundError:
-    print("Error! File of samples not found")
-    sys.exit()
-
 # args
-threads = int(sys.argv[2])
-reference = sys.argv[3]
-alt_fraction = sys.argv[4]
-indels = sys.argv[5]
-dump = sys.argv[6]
+samples_file = sys.argv[1]  # samples list
+threads = int(sys.argv[2])  # number of threads to use
+reference = sys.argv[3]  # reference genome name
+ref_index = sys.argv[4]  # bowtie2 index base name
+alt_fraction = sys.argv[5]  # alt fraction decimal
+indels = sys.argv[6]  # call indels or not
+dump = sys.argv[7]  # dump or not
+read_type = sys.argv[8]  # paired or unpaired
+clean = sys.argv[9]  # remove fastq and bam or not
 
-# read file names
-with open(filename) as f:
-    cmn_names = f.readlines()
-cmn_names = [x.strip() for x in cmn_names]
 
-
-######### FUNCTIONS ######################
-# dump function
 def dumper(read_file):
     cmd = 'fastq-dump --split-files --clip --gzip %s' % read_file
     os.system(cmd)
 
 
-def bowtie(read_file, cpus, index):
-    r1 = read_file + '_1.fastq.gz'
-    r2 = read_file + '_2.fastq.gz'
-    bowtie_cmd = 'bowtie2 -q -t --local -x %s -p %s -1 %s -2 %s  -S  %s.sam 2> %s.stats' % (index, cpus, r1, r2,
+def bowtie(read_file, cpus, index, paired):
+
+    if paired == "p" or paired == "paired":
+        r1 = read_file + '_1.fastq.gz'
+        r2 = read_file + '_2.fastq.gz'
+        bowtie_cmd = 'bowtie2 -q -t --local -x %s -p %s -1 %s -2 %s  -S  %s.sam 2> %s.stats' % (index, cpus, r1, r2,
                                                                                             read_file, read_file)
+    else:
+        r1 = read_file + '.fastq.gz'
+        bowtie_cmd = 'bowtie2 -q -t --local -x %s -p %s -U %s -S  %s.sam 2> %s.stats' % (index, cpus, r1, read_file,
+                                                                                         read_file)
     os.system(bowtie_cmd)
 
 
@@ -77,32 +79,46 @@ def samtools(read_file, cpus):
     os.system(index_cmd)
 
 
-# FB fun (with indels)
-def freebayes(sample, frac, ref):
-    print("sample %s is being processed... indels mode" % sample)
-    cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
-          "--haplotype-length -1 --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample, sample)
-    os.system(cmd)
+def freebayes(sample, frac, ref, ind):
+    """
+    function to run FreeBayes
+    :param sample: a name of a BAM file (without extension)
+    :param frac: min alternate fraction (in decimal format)
+    :param ref: reference genome
+    :param ind: report indels (boolean)
+    :return: 0
+    """
+    if ind:
+        print("sample %s is being processed... indels mode" % sample)
+        cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
+              "--haplotype-length -1 --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample,  sample)
+        os.system(cmd)
+    else:
+        print("sample %s is being processed... no indels mode" % sample)
+        cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
+              "--haplotype-length -1 --no-indels --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample, sample)
+        os.system(cmd)
     return 0
 
 
-# FB fun (no indels)
-def freebayes_noind(sample, frac, ref):
-    print("sample %s is being processed... no indels mode" % sample)
-    cmd = "freebayes -f %s -p 1 --min-base-quality 20 --min-alternate-fraction %s --max-complex-gap 0 " \
-          "--haplotype-length -1 --no-indels --min-coverage 10 %s.bam > %s.fb.vcf" % (ref, frac, sample, sample)
-    os.system(cmd)
-    return 0
+def check_file(ext):
+    if len(glob.glob(ext)) == 0:
+        print("Files %s not found. Exit!")
+        sys.exit(1)
+    else:
+        pass
 
 
-########## THE PIPELINE ################
+# read file names
+samples = [line.rstrip() for line in open(samples_file).readlines()]
+start_time = time.time()
 
 # parallel fastq-dump
 if dump == 1 or dump == "yes":
-    print("start dumping from SRA-archive...")
+    print("1) start dumping from SRA-archive...")
     dask.set_options(pool=ThreadPool(threads))
     dumper_lst = list()
-    for f in cmn_names:
+    for f in samples:
         dumper_lst.append(dask.delayed(dumper)(read_file=f))
 
     dumping_process = dask.delayed(dumper_lst)
@@ -113,62 +129,55 @@ if dump == 1 or dump == "yes":
     cache_path = '/data5/bio/MolGenMicro/ncbi_cache/sra/'
     os.system('rm %s*.sra' % cache_path)
 else:
-    print("No dumping was selected. Start mapping.")
+    print("fastq-dump skipped....")
+
+check_file("*.fastq.gz")
 
 # start mapping
-# build index
-if ".fna" in reference:
-    index_name = reference[:-4]
-elif ".fasta" in reference:
-    index_name = reference[:-6]
-elif ".fa" in reference:
-    index_name = reference[:-3]
+print("2) Mapping...")
+if not os.path.isfile(ref_index + ".1.bt2"):
+    os.system("bowtie2-build % %" % (reference, ref_index))
 else:
-    print("Reference genome file extension is not recognized. It must be '.fa', '.fna' or '.fasta'.\nQuit.")
-    sys.exit()
+    print("Genome index found...")
 
-if len(glob.glob("*.bt2")) == 6:
-    print("It seems there are index files in the CWD. Skip genome indexing.")
-else:
-    print("No genome index found. Indexing...")
-    os.system('bowtie2-build %s %s' % (reference, index_name))
+print("Found %i samples..." % len(samples))
+for S in samples:
+    bowtie(S, threads, ref_index, paired=read_type)
+    samtools(S, threads)
 
-print("mapping...")
-print("there are %i pairs of files" % len(cmn_names))
-n = 0
-for f in cmn_names:
-    print("working on %s..." % f)
-    bowtie(f, cpus=threads, index=index_name)
-    samtools(f, cpus=threads)
-    n += 1
-    if n % 250 == 0:
-        print('\n%i pairs are mapped\n' % n)
+check_file("*.bam")
 
 # remove reads
-print("removing FASTQ files...")
-os.system("rm *fastq.gz")
+if clean == "y" or clean == "yes" or clean == "remove":
+    print("Removing FASTQ files...")
+    os.system("rm *fastq.gz")
 
 # Variant calling
-print("Variant calling with FreeBayes in parallel...")
+print("3) Variant calling with FreeBayes...")
 
-# run in parallel
+# for older versions of dask
 dask.set_options(pool=ThreadPool(threads))
+# for newer versions
+# dask.config.set(pool=ThreadPool(threads))
 total_lst = []
-if indels == "1":
-    # with indels
-    for s in cmn_names:
-        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference))
-else:
-    for s in cmn_names:
-        total_lst.append(dask.delayed(freebayes_noind)(sample=s, frac=alt_fraction, ref=reference))
+if indels == "1" or indels == "yes" or indels == "y":
+    for s in samples:
+        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference, ind=True))
+elif indels == '0' or indels == 'no' or indels == 'n':
+    for s in samples:
+        total_lst.append(dask.delayed(freebayes)(sample=s, frac=alt_fraction, ref=reference, ind=False))
 
 total = dask.delayed(total_lst)
 total.compute()
+t = time.time() - start_time
+
+print("Finished in %s sec / %s m / %s h" % (str(t), str(t/60), str(t/3600)))
 
 # remove BAMs
-print("removing BAM files...")
-os.system('rm *.bam')
-os.system('rm *.bam.bai')
+if clean == "y" or clean == "yes" or clean == "remove":
+    print("removing BAM files...")
+    os.system('rm *.bam')
+    os.system('rm *.bam.bai')
 
 # FINISH
-print("dumping-mapping-calling done!")
+print("Finished!")

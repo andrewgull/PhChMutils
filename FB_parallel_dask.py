@@ -59,7 +59,10 @@ def freebayes(sample, frac, ref, ind):
 
 
 # run in parallel
-dask.config.set(pool=ThreadPool(threads))
+# for older versions of dask
+dask.set_options(pool=ThreadPool(threads))
+# for newer versions
+# dask.config.set(pool=ThreadPool(threads))
 total_lst = []
 if indels == "1" or indels == "yes" or indels == "y":
     for s in cmn_names:

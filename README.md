@@ -27,6 +27,9 @@ Dependencies:
      3. FreeBayes
      4. bgzip
      5. tabix
+     6. blastn
+     
+`ABresist.py`, `makeAnnotation.py` require all the R functions to be placed in `/home/$USER/bin`
 
 Description of the scripts:
 
@@ -57,14 +60,7 @@ Description of the scripts:
                   | ERR000 | A5000C | G300C |      |
                   |        | F300Y  |       |      |
 
-- `DMVC.py` - a pipeline to:
-    1. download SRA files 
-    2. map reads on reference 
-    3. free disk space by removing already mapped SRA 
-    4. call variants with FreeBayes 
-    5. free disk space by removing *bam* and *fastq* files
-
-    Run it without args to see full help message.
+- `DMVC.py` - under development!
 
 - `MUMmerSNPs2VCF.py` - reformat *snps files produced by nucmer show-snps to VCF.
 

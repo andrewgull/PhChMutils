@@ -23,11 +23,12 @@ Dependencies:
      
    - standalone tools:
      1. samtools
-     2. bowtie2
-     3. FreeBayes
-     4. bgzip
-     5. tabix
-     6. blastn
+     2. vcftools
+     3. bowtie2
+     4. FreeBayes
+     5. bgzip
+     6. tabix
+     7. blastn
      
 `ABresist.py`, `makeAnnotation.py` require all the R functions to be placed in `/home/$USER/bin`
 

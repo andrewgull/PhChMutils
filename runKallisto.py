@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-# wrapper script to run kallisto and quant and organize output files
+# wrapper script to run kallisto quant and organize output files
 
 import os
 import sys
 import glob
+from Bio import SeqIO
+import re
+import pandas as pd
 
 
 def kallisto(r1, r2, index="H37Rv.cds.idx", threads=1, boot=10):
@@ -44,8 +47,47 @@ for i in range(0, len(reads), 2):
 
 os.chdir("./kallisto_dir")
 # extract the 4th column from abundance files
-bash_extract = """for F in abundance_*.tsv; do cut -f4 -d$'\t' $F | tail -n +2 > $F".tpm"; echo -e ${F:10:10} | cat - $F".tpm" > $F".head.tpm"; cut -f1 -d$'\t' $F > feature_column; paste feature_column *.head.tpm > TPM_ALL.tsv; done"""
+# original bash version
+# for F in abundance_*.tsv;
+#   do cut -f4 -d$'\t' $F | tail -n +2 > $F".tpm";
+#   echo -e ${F:10:10} | cat - $F".tpm" > $F".head.tpm";
+#   cut -f1 -d$'\t' $F > feature_column;
+#   paste feature_column *.head.tpm > COUNTS_ALL.tsv;
+# done
 
-os.system(bash_extract)
+# python version
+init_tab = pd.read_csv(glob.glob("abundance_*.tsv")[0], delimiter="\t")[['target_id']]
+init_tab = init_tab.set_index('target_id')
+
+for f in glob.glob("abundance_*.tsv"):
+    table = pd.read_csv(f, delimiter="\t", index_col=None)
+    table = table[['target_id', 'est_counts']]
+    table.columns = ['target_id', f[10:-4]]
+    table = table.set_index('target_id')
+    init_tab = table.join(init_tab)
+
+# add column with loci tags and gene names
+cds_headers = [rec.description for rec in SeqIO.parse(index_file[:-3] + "fasta", "fasta")]
+ids = [rec.id for rec in SeqIO.parse(index_file[:-3] + "fasta", "fasta")]
+loci_tags = list()
+gene_names = list()
+for rec in cds_headers:
+    try:
+        gene = re.findall(r'\[gene=(.*)\] \[locus_tag=.*\]', rec)[0]
+    except IndexError:
+        gene = ''
+    try:
+        tag = re.findall(r'\[locus_tag=(.*)\] \[db_xref=.*\]', rec)[0]
+    except IndexError:
+        tag = ''
+    gene_names.append(gene)
+    loci_tags.append(tag)
+
+names_and_tags = pd.DataFrame({'target_id': ids, 'gene': gene_names, 'locus_tag': loci_tags})
+
+full_table = names_and_tags.set_index('target_id').join(init_tab)
+
+# write to a file
+full_table.to_csv('counts_all.tsv', sep='\t', na_rep="")
 
 print('done')

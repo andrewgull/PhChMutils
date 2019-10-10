@@ -87,4 +87,4 @@ Description of the scripts:
 - `collineariser.py` - a script to make meta alignment from MAUVE output files.
                        Useful for making split-graphs of bacteriophages' genomes.
                        Run it without args to see full help message.
-- `runKallisto.py` - a wrapper for kallisto pseudo-aligner ('kallsito quant')
+- `runKallisto.py` - a wrapper for kallisto pseudo-aligner ('kallsito quant'). See a tutorial [here](http://sepsis-omics.github.io/tutorials/modules/kallisto/#background)

@@ -67,8 +67,9 @@ for f in glob.glob("abundance_*.tsv"):
     init_tab = table.join(init_tab)
 
 # add column with loci tags and gene names
-cds_headers = [rec.description for rec in SeqIO.parse(index_file[:-3] + "fasta", "fasta")]
-ids = [rec.id for rec in SeqIO.parse(index_file[:-3] + "fasta", "fasta")]
+cds_filename = "../" + index_file[:-3] + "fasta"
+cds_headers = [rec.description for rec in SeqIO.parse(cds_filename, "fasta")]
+ids = [rec.id for rec in SeqIO.parse(cds_filename, "fasta")]
 loci_tags = list()
 gene_names = list()
 for rec in cds_headers:

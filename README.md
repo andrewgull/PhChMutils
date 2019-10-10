@@ -29,6 +29,7 @@ Dependencies:
      5. bgzip
      6. tabix
      7. blastn
+     8. kallisto
      
 `ABresist.py`, `makeAnnotation.py` require all the R functions to be placed in `/home/$USER/bin`
 
@@ -86,3 +87,4 @@ Description of the scripts:
 - `collineariser.py` - a script to make meta alignment from MAUVE output files.
                        Useful for making split-graphs of bacteriophages' genomes.
                        Run it without args to see full help message.
+- `runKallisto.py` - a wrapper for kallisto pseudo-aligner ('kallsito quant')

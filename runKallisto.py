@@ -41,11 +41,11 @@ for i in range(0, len(reads), 2):
     print('processing %s...' % reads[i][:-cut])
     kallisto(reads[i], reads[i+1], index=index_file, threads=thrds, boot=bt)
     print('renaming')
-    os.system('mv kallisto_dir/abundance.tsv kallisto_dir/abundance_%s.tsv' % reads[i][:-cut])
-    os.system('mv kallisto_dir/pseudoalignments.bam kallisto_dir/pseudoalignments_%s.bam' % reads[i][:-cut])
-    os.system('mv kallisto_dir/pseudoalignments.bam.bai kallisto_dir/pseudoalignments_%s.bam.bai' % reads[i][:-cut])
+    os.system('mv kallisto_out/abundance.tsv kallisto_dir/abundance_%s.tsv' % reads[i][:-cut])
+    os.system('mv kallisto_out/pseudoalignments.bam kallisto_dir/pseudoalignments_%s.bam' % reads[i][:-cut])
+    os.system('mv kallisto_out/pseudoalignments.bam.bai kallisto_dir/pseudoalignments_%s.bam.bai' % reads[i][:-cut])
 
-os.chdir("./kallisto_dir")
+os.chdir("./kallisto_out")
 # extract the 4th column from abundance files
 # original bash version
 # for F in abundance_*.tsv;
